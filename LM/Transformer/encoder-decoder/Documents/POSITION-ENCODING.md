@@ -46,8 +46,6 @@ else
     dimensionsOfTheModelHyperparameter = DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER;
 }
 ```
-INPUTSEQUENCE, POSITION AND POSITIONENCODING, DIVISIONTERM PROVIDE EACH WORD THEIR OWN CORRESPONDING HIDDEN STATE THAT IS PASSED ALL THE WAY TO THE DECODING STAGE.
-Positional encoding is crucial in the Transformer model because it doesn't have an inherent sense of order like recurrent or convolutional neural networks.
 
 ### ```Positional Encoding```
 The `positional encoding`(___Collective<float> positionEncoding___)  is crucial for the Transformer model, which lacks the inherent order awareness of recurrent neural networks. This encoding injects information about word order into the model's internal representation by combining 'position' data with a `division term`(___Collective<float> divisionTerm___). This enriched representation, not strictly a hidden state, then flows through both encoding and decoding stages, enabling the model to understand relationships between words even when they're far apart.
