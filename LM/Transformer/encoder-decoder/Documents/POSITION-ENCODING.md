@@ -2,7 +2,8 @@ still working on this paper...
 
 
 ---
-## How Transformers See Words with Positional Encoding.
+## ___Positional Encoding___
+### `How Transformers See Words`.
 ---
 ### `d_model`
 `d_model` is a crucial hyperparameter in Transformers: It sets the size of word embeddings and affects both model capacity and computational cost.
