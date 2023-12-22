@@ -47,7 +47,6 @@ else
     dimensionsOfTheModelHyperparameter = DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER;
 }
 ```
-
 ### ```Positional Encoding```
 The `positional encoding`(___Collective<float> positionEncoding___)  is crucial for the Transformer model, which lacks the inherent order awareness of recurrent neural networks. This encoding injects information about word order into the model's internal representation by combining 'position' data with a `division term`(___Collective<float> divisionTerm___). This enriched representation, not strictly a hidden state, then flows through both encoding and decoding stages, enabling the model to understand relationships between words even when they're far apart.
 
@@ -82,11 +81,35 @@ struct Collective<float> positionEncoding;
 ```
 ```C++
 /*
+    In transformers, a common technique for incorporating sequence information is by adding positional encodings to the input embeddings.
+    The positional encodings are generated using sine and cosine functions of different frequencies.
+    The expression wrapped in the following macro is used to scale the frequency of the sinusoidal functions used to generate positional encodings. 
+
+    div_term
+    ----------    
+    This expression is used in initializing "div_term".
+
+    The expression is multiplyed by -1
+    ------------------------------------
+    The resulting "div_term" array contains values that can be used as divisors when computing the sine and cosine values for positional encodings.
+    
+    Later on "div_term" and "positions" are used with sin() cos() functions to generate those sinusoidal positional encodings.
+    The idea is that by increasing the frequency linearly with the position,
+    the model can learn to make fine-grained distinctions for smaller positions and coarser distinctions for larger positions.
+    
+    @sfc, Scaling Factor Constant.
+    @d_model, Dimensions of the transformer model.
+ */
+#define SCALING_FACTOR(sfc, d_model) -1*(log(sfc)/d_model)
+```
+```C++
+/*
     This tensor is a part of the positional encoding calculation used to provide the model with information about the positions of tokens in the input sequence.
     The purpose of "div_term" is to scale the frequencies of the sinusoidal functions. It does that by working as divisor when computing the sine and cosine values for positional encodings.
     Think of it like a tuning fork: div_term helps the model adjust the frequencies of certain mathematical waves, called sine and cosine waves, to match the positions of words in a sentence. This tuning process is crucial because it allows the model to capture relationships between words that are far apart, making it better at understanding long and complex sentences.
  */
 struct Collective<float> divisionTerm;
+
 /*
     @p, position an instance of Collective composite
     @is, input sequence
