@@ -295,6 +295,7 @@ ts = Collective<t>(ptr, {static_cast<cc_tokenizer::string_character_traits<char>
             Collective<t> tgtMask = Numcy::triu<t>(Numcy::ones<t>({di.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], di.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), 1, false);\
             \
             Encoder encoder(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER, DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER, DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER, DEFAULT_DROP_OUT_RATE_HYPERPARAMETER);\
+            encoder.forward<t>(ei);\
             /* Reference counting, manual memory management */\
             /* is.decrementReferenceCount(); */\
             /*ts.decrementReferenceCount();*/\

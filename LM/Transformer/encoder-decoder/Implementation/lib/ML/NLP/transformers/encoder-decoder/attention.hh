@@ -3,11 +3,15 @@
     Q@khaa.pk
  */
 
+#include "../../../../numcy/numcy.hh"
 #include "./header.hh"
 
 #ifndef NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ATTENTION_HH
 #define NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ATTENTION_HH
 
+/*
+    Multi head attention
+ */
 typedef class Attention
 {
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfTheModel, numberOfAttentionHeads;
@@ -25,9 +29,14 @@ typedef class Attention
         {            
         }
 
-        ~Attention()
+        template <typename t = float>
+        void forward(Collective<t>& ei)
         {
-            std::cout<< "In Attention()" << std::endl;            
+            
+        }
+
+        ~Attention()
+        {                        
         }
 
 

@@ -3,6 +3,7 @@
     Q@khaa.pk
  */
 
+#include "../../../../numcy/numcy.hh"
 #include "./encoderlayer.hh"
 #include "./header.hh"
 
@@ -12,6 +13,10 @@
 class Encoder 
 {
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfTheModel, numberOfLayers, numberOfAttentionHeads;
+
+    /*
+        Instead of one encoder we have few. 
+     */
     ENCODERLAYERLIST_PTR encoderLayerListHead;
     float dropOutRate;
 
@@ -69,6 +74,19 @@ class Encoder
                 current->next = NULL;    
                 current->ptr = new EncoderLayer(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);
             }            
+        }
+
+        template <typename t = float>
+        void forward(Collective<t>& ei)
+        {
+            ENCODERLAYERLIST_PTR current = encoderLayerListHead;
+
+            while (current != NULL)
+            {
+                current->ptr->forward(ei);
+
+                current = current->next;                    
+            }
         }
 
         ~Encoder(void)        

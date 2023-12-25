@@ -12,6 +12,7 @@
     The embedding only happens in the bottom most encoder, but in other encoders, it would be the output of the encoder that is directly below.
  */
 
+#include "../../../../numcy/numcy.hh"
 #include "./attention.hh"
 #include "./header.hh"
 
@@ -23,6 +24,9 @@
  */
 typedef struct EncoderLayerList
 {
+    /*
+        Transformer encoder layer
+     */
     class EncoderLayer* ptr; 
 
     struct EncoderLayerList* next;
@@ -31,15 +35,14 @@ typedef struct EncoderLayerList
 
 typedef ENCODERLAYERLIST* ENCODERLAYERLIST_PTR;
 
-/*
-    def __init__(self, d_model, num_heads, dropout_rate):
-        self.multihead_attention = MultiHeadAttention(d_model, num_heads)
-        self.dropout_rate = dropout_rate
- */
 
+/*
+    The encoder consists of many encoder layers.
+ */
 typedef class EncoderLayer
-{
+{   
     MULTIHEADATTENTION attention;
+
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfTheModel, numberOfAttentionHeads;
     float dropOutRate;
 
@@ -54,9 +57,14 @@ typedef class EncoderLayer
             @dropout_rate, Dropout rate for regularization. The dropout_rate in the Transformer model is a regularization technique to prevent overfitting.
          */
         EncoderLayer(cc_tokenizer::string_character_traits<char>::size_type d_model, cc_tokenizer::string_character_traits<char>::size_type num_heads, float dropout_rate) : dropOutRate(dropout_rate)
-        {
-            // self.multihead_attention = MultiHeadAttention(d_model, num_heads)
+        {            
             attention = MULTIHEADATTENTION(d_model, num_heads);
+        }
+
+        template <typename t = float>
+        void forward(Collective<t>& ei)
+        {
+            attention.forward(ei);
         }
 
         ~EncoderLayer()
