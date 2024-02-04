@@ -8,17 +8,11 @@
 #include "../lib/argsv-cpp/lib/parser/parser.hh"
 #include "../lib/corpus/corpus.hh"
 #include "../lib/ML/NLP/transformers/encoder-decoder/model.hh"
-#include "../lib/numcy/numcy.hh"
+#include "../lib/numcy/header.hh"
 #include "../lib/sundry/cooked_read.hh"
 
 #ifndef TRANSFORMERS_CODER_ENCODER_MODULE_MAIN_HH
 #define TRANSFORMERS_CODER_ENCODER_MODULE_MAIN_HH
-
-#ifdef DEFAULT_CORPUS_FOR_CODER_ENCODER_MODEL_USING_TRANSFORMERS_FILE
-#undef DEFAULT_CORPUS_FOR_CODER_ENCODER_MODEL_USING_TRANSFORMERS_FILE
-#endif
-
-#define DEFAULT_CORPUS_FOR_CODER_ENCODER_MODEL_USING_TRANSFORMERS_VOCAB_FILE "data\\medical-nlp\\data\\vocab.txt"
 
 /*
     This allows you to conditionally include or exclude code based on whether macro is used as it is or prefixed/preceded by bang.
@@ -83,9 +77,7 @@
                  bs_line (Set batch size hyperparameter to line)\n\
                  bs_paragraph bs_para (Sets batch size hyperparameter to paragraph)"                 
 
-
 #define CORPUS_COMMAND "i I -i -I input --input (Path to file which contains input sequences)\n\
                         t T -t -T target --target (Path to file which contains target sequences)"
-
 
 #endif
