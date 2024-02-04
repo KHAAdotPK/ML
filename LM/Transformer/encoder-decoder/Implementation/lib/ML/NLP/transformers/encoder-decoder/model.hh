@@ -3,65 +3,60 @@
     Q@khaa.pk
  */
 
-#include "./attention.hh"
-#include "./encoderlayer.hh"
-#include "./encoder.hh"
+#include "header.hh"
 
 #ifndef NLP_ENCODER_DECODER_TRANSFORMER_MODEL_HH
 #define NLP_ENCODER_DECODER_TRANSFORMER_MODEL_HH
 
-/* 
-    ----------------------------------  
-    | UTILIZING INITIALIZER LISTS... | 
-    ----------------------------------
-    Here's an illustration of how initializer lists can enhance code readability and conciseness:
-    Consider initializing a 'Collective<float>' object 'p' with the result of 'Numcy::arange' and a specified shape:
-    Using an initializer list:
-    Collective<float> p = {Numcy::arange((float)0.0, (float)is.shape[1], (float)1.0, {1, is.shape[1], NULL, NULL}), {1, is.shape[1], NULL, NULL}};
-    Instead of the above, we could opt for a constructor approach:
-    Collective<float> p = Collective<float>(Numcy::arange((float)0.0, (float)is.shape[1], (float)1.0, {1, is.shape[1], NULL, NULL}), {1, is.shape[1], NULL, NULL});
+/*          
+    @brief Computes sine and cosine values for a templated type and fills even and odd indices of the position encoding array.
+            
+    This code block involves the following steps: 
+    1. Computes the sine values for the product of two templated types (p * dt) using Numcy::sin<t>.
+    2. Creates a Collective instance named 'product' to store the sine values.
+    Note: Using a separate instance is necessary to avoid potential issues related to the order of evaluation in complex expressions.
+    In some cases, direct usage of Numcy::sin<t>((p * dt)) within the FILL macros might lead to unintended behavior due to the way macros handle expressions.
+    3. Fills even indices of the position encoding array (@pe) with the computed sine values using the FILL_EVEN_INDICES_OF_POSITION_ENCODING macro.
+    4. Fills odd indices of the position encoding array (@pe) with the same 'product' Collective instance, effectively storing the sine values in even indices and cosine values in odd indices using the FILL_ODD_INDICES_OF_POSITION_ENCODING macro.
 
-    It's worth noting that when dealing with private properties within the 'Collective' composite, using the specific overloaded constructor becomes necessary, while otherwise, it may not be required.
+    @param pe Position encoding array to be filled with sine and cosine values.
+    @param p Templated type representing a mathematical value.
+    @param dt Templated type representing another mathematical value.
  */
-
-
 /*
-    @p, position an instance of Collective composite
-    @is, input sequence
-    @dt, division term
-    @dm, dimensions of the model(d_model)
-    @pe, position encoding
-    @t, type
- */
-#define BUILD_POSITION_ENCODING_FOR_LINE_BATCH_SIZE(p, is, dt, dm, pe, t) {\
-p = Collective<t>{Numcy::arange<t, t>((t)0.0, (t)is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], (t)1.0, {1, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), {1, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}};\
-dt = Collective<t>{Numcy::exp<t>(Numcy::arange<t, t>((t)0.0, (t)dm, (t)2.0, {dm/2, 1, NULL, NULL}), dm/2), {dm/2, 1, NULL, NULL}};\
-dt = dt * SCALING_FACTOR(SCALING_FACTOR_CONSTANT, dm);\
-/*pe = Collective<t>{Numcy::zeros<t>({dm, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), {dm, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}};*/\
-pe = Numcy::zeros<t>({dm, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL});\
-FILL_EVEN_INDICES_OF_POSITION_ENCODING(pe, Numcy::sin<t>(p * dt));\
-FILL_ODD_INDICES_OF_POSITION_ENCODING(pe, Numcy::cos<t>(p * dt));\
-}\
+    @brief Fills even indices of the position encoding array with values obtained from the sine function.
 
+    This macro is designed to operate on a position encoding array (@pe) and a Collective instance (@s). The Collective instance is expected to represent the result of applying the sine function to a product of two templated types, denoted by Numcy::sin<t>((p * dt)).
+
+    The loop iterates through each element of the Collective instance and assigns the corresponding sine function result to the even indices of the position encoding array.
+
+    @param pe Position encoding array to be filled with values.
+    @param s Collective instance representing Numcy::sin<t>((p * dt)).
+*/
+#define FILL_EVEN_INDICES_OF_POSITION_ENCODING(pe, s) {\
+    for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < s.get_shape().get_size(); i++)\
+    {\
+        /* Assign the sine function result to even indices of the position encoding array.*/\
+        pe[i * 2 + 0] = s[i];\
+    }\
+}
 /*
-    @v, vocab
-    is, input sequence
-    t, type
-    for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < target_sequence_vocab.len(false); i++)
-    {
-        std::cout<<target_sequence_vocab(i, false).c_str()<<" - "<<target_sequence_vocab(target_sequence_vocab(i, false))->index<<std::endl;
-    }
- */
-#define BUILD_INPUT_SEQUENCE(v, is, t) {\
-                                            cc_tokenizer::allocator<char> alloc_obj;\
-                                            t* ptr = reinterpret_cast<t*>(alloc_obj.allocate(v.len(false)*sizeof(t)));\
-                                            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < v.len(false); i++)\
-                                            {\
-                                                /*std::cout<<v(i, false).c_str()<<" - "<<v(v(i, false))->index<<std::endl;*/\
-                                                ptr[i] = v(v(i, false))->index;\
-                                            }\
-                                            is = {ptr, {v.len(false), 1, NULL, NULL}};\
-                                       }\
+    @brief Fills odd indices of the position encoding array with values from a Collective instance.
+
+    This macro is designed to operate on a position encoding array (@pe) and a Collective instance (@c). The Collective instance is expected to contain values that need to be assigned to the odd indices of the position encoding array.
+
+    The loop iterates through each element of the Collective instance and assigns the corresponding value to the odd indices of the position encoding array.
+
+    @param pe Position encoding array to be filled with values.
+    @param c Collective instance containing values to be assigned to odd indices.
+*/
+#define FILL_ODD_INDICES_OF_POSITION_ENCODING(pe, c) {\
+    for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < c.get_shape().get_size(); i++)\
+    {\
+        /* Assign the value from the Collective instance to odd indices of the position encoding array.*/\
+        pe[i * 2 + 1] = c[i];\
+    }\
+}
 
 /*
  * ---------------------------------------------------------
@@ -96,15 +91,7 @@ for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < p.get_tot
     CORPUS_PTR ret = v(p.get_token_by_number(i + 1));\
     ptr[i] = ret->index;\
 }\
-\
-/* TODO: Eliminate the Need for Narrow Conversion */\
-/* The return type of 'get_total_number_of_tokens()' is 'cc_tokenizer::string_character_traits<char>::int_type', */\
-/* while 'DIMENSIONS::columns' is 'cc_tokenizer::string_character_traits<char>::size_type'. */\
-/* Converting a signed to unsigned is a narrow conversion; it's recommended to avoid such conversions. */\
-/* In future iterations, enhance code consistency by ensuring similar semantics share consistent data types.*/\
-is = Collective<t>(ptr, {static_cast<cc_tokenizer::string_character_traits<char>::size_type>(p.get_total_number_of_tokens()), 1, NULL, NULL});\
-/* Same thing with initializer lists. */\
-/* is = {ptr, {static_cast<cc_tokenizer::string_character_traits<char>::size_type>(p.get_total_number_of_tokens()), 1, NULL, NULL}}; */\
+is = Collective<t>(ptr, DIMENSIONS{static_cast<cc_tokenizer::string_character_traits<char>::size_type>(p.get_total_number_of_tokens()), 1, NULL, NULL});\
 }\
 
 /*
@@ -147,106 +134,37 @@ for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < p.get_tot
 /* while 'DIMENSIONS::columns' is 'cc_tokenizer::string_character_traits<char>::size_type'. */\
 /* Converting a signed to unsigned is a narrow conversion; it's recommended to avoid such conversions. */\
 /* In future iterations, enhance code consistency by ensuring similar semantics share consistent data types.*/\
-ts = Collective<t>(ptr, {static_cast<cc_tokenizer::string_character_traits<char>::size_type>(p.get_total_number_of_tokens()), 1, NULL, NULL});\
+ts = Collective<t>(ptr, Dimensions{static_cast<cc_tokenizer::string_character_traits<char>::size_type>(p.get_total_number_of_tokens()), 1, NULL, NULL});\
 }\
-                                                              
-/*
-    @v, vocab, it is input vocabulary
-    @is, input sequence    
-    @si, start index
-    @ei, end index
-    @t, type
- */
-#define BUILD_INPUT_SEQUENCE_NEW(v, is, si, ei, t) {\
-                                                        t* ptr = reinterpret_cast<t*>(cc_tokenizer::allocator<char>().allocate((ei - si)*sizeof(t)));\
-                                                        for (cc_tokenizer::string_character_traits<char>::size_type i = si; i < ei; i++)\
-                                                        {\
-                                                            ptr[i] = v(v(i, REPLIKA_PK_USE_WHOLE))->index;\
-                                                        }\
-                                                        is = {ptr, {ei - si, 1, NULL, NULL}};\
-                                                   }\
 
 /*
-    @v, vocab
-    @ts, target sequence
-    @t, type
- */                                    
-#define BUILD_TARGET_SEQUENCE(v, ts, t) {\
-                                            cc_tokenizer::allocator<char> alloc_obj;\
-                                            t* ptr = reinterpret_cast<t*>(alloc_obj.allocate(v.len(false)*sizeof(t)));\
-                                            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < v.len(false); i++)\
-                                            {\
-                                                /*std::cout<<v(i, false).c_str()<<" - "<<v(v(i, false))->index<<std::endl;*/\
-                                                ptr[i] = v(v(i, false))->index;\
-                                            }\
-                                            ts = {ptr, {v.len(false), 1, NULL, NULL}};\
-                                        }\
-
-/*
-    @v, vocab, it is target vocabulary
-    @ts, target sequence
-    @si, start index
-    @ei, end index
-    @t, type
- */
-#define BUILD_TARGET_SEQUENCE_NEW(v, ts, si, ei, t) {\
-                                                        t* ptr = reinterpret_cast<t*>(cc_tokenizer::allocator<char>().allocate((ei - si)*sizeof(t)));\
-                                                        for (cc_tokenizer::string_character_traits<char>::size_type i = si; i < ei; i++)\
-                                                        {\
-                                                            ptr[i] = v(v(i, REPLIKA_PK_USE_WHOLE))->index;\
-                                                        }\
-                                                        ts = {ptr, {v.len(REPLIKA_PK_USE_WHOLE), 1, NULL, NULL}};\
-                                                    }\
-
-/*
-    @dm, d_model, dymensions of the model
-    @p, position
-    @dt, division term
-    @pe, position encoding
+    @p, position an instance of Collective composite
     @is, input sequence
-
-    position = {Numcy::arange((float)0.0, (float)inputSequence.shape[1], (float)1.0, {1, inputSequence.shape[1], NULL, NULL}), {1, inputSequence.shape[1], NULL, NULL}}; 
-    divisionTerm = {Numcy::exp(nc.arange((float)0.0, (float)dimensionsOfTheModelHyperparameter, (float)2.0, {dimensionsOfTheModelHyperparameter/2, 1, NULL, NULL}), dimensionsOfTheModelHyperparameter/2), {dimensionsOfTheModelHyperparameter/2, 1, NULL, NULL}};        
- */ 
-#define BUILD_POSITION_ENCODING(dm, p, dt, pe, is) {\
-                                                        p = {Numcy::arange((float)0.0, (float)inputSequence.shape[1], (float)1.0, {1, inputSequence.shape[1], NULL, NULL}), {1, is.shape[1], NULL, NULL}};\
-                                                        dt = {Numcy::exp(nc.arange((float)0.0, (float)dm, (float)2.0, {dm/2, 1, NULL, NULL}), dm/2), {dm/2, 1, NULL, NULL}};\
-                                                        MULTIPLY_ARRAY_BY_SCALAR(dt.ptr, SCALING_FACTOR(SCALING_FACTOR_CONSTANT, dm), dm/2, dt.ptr, float);\
-                                                        pe = {Numcy::zeros<float>({dm, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), {dm, is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}};\
-                                                        /*std::cout<<"--> pe.columns*pe.rows = "<<pe.shape.columns*pe.shape.rows<<std::endl;*/\
-                                                        /*FILL_EVEN_INDCES_OF_POSITION_ENCODING(pe, Numcy::sin(p * dt));*/\
-                                                        Collective<float> temp = Numcy::sin(p * dt);\
-                                                        FILL_EVEN_INDICES_OF_POSITION_ENCODING(pe, temp);\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(temp.ptr));\
-                                                        temp = {NULL, {0, 0, NULL, NULL}};\
-                                                        /*FILL_ODD_INDICES_OF_POSITION_ENCODING(pe, Numcy::cos(p * dt));*/\
-                                                        temp = Numcy::cos(p * dt);\
-                                                        FILL_ODD_INDICES_OF_POSITION_ENCODING(pe, temp);\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(temp.ptr));\
-                                                        temp = {NULL, {0, 0, NULL, NULL}};\
-                                                   }\
-
-/*
+    @dt, division term
+    @dm, dimensions of the model(d_model)
     @pe, position encoding
-    @s, instance of Collective
+    @t, type
  */
- #define FILL_EVEN_INDICES_OF_POSITION_ENCODING(pe, s) {\
-                                                            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < s.shape.getN(); i++)\
-                                                            {\
-                                                                pe[i*2 + 0] = s[i];\
-                                                            }\
-                                                       }\
-
-/*
-    @pe, position encoding
-    @c, instance of Collective
- */
-#define FILL_ODD_INDICES_OF_POSITION_ENCODING(pe, c) {\
-                                                         for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < c.shape.getN(); i++)\
-                                                         {\
-                                                             pe[i*2 + 1] = c[i];\
-                                                         }\
-                                                     }\
+#define BUILD_POSITION_ENCODING_FOR_LINE_BATCH_SIZE(p, is, dt, dm, pe, t) {\
+    try\
+    {\
+        p = Numcy::arange<t, t>((t)0.0, (t)is.get_shape()[NUMCY_DIMENSIONS_SHAPE_COLUMNS], (t)1.0, DIMENSIONS{1, is.get_shape()[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL});\
+        /*std::cout<< ">>>> " << p.get_shape().get_dimensionsOfArray()[p.get_shape().get_dimensionsOfArray().get_size() - 1] << std::endl;*/\
+        dt = Numcy::exp<t>(Numcy::arange<t, t>((t)0.0, (t)dm, (t)2.0, DIMENSIONS{dm/2, 1, NULL, NULL}));\
+        /*std::cout<< ">>>>> " << dt.get_shape().get_dimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
+        /*dt = Numcy::dot(p, dt);*/\
+        dt = dt * SCALING_FACTOR(SCALING_FACTOR_CONSTANT, dm);\
+        pe = Numcy::zeros<t>(DIMENSIONS{dm, is.get_shape()[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL});\
+        /* Please read the comments */\
+        Collective<t> product = Numcy::sin<t>(p * dt);\
+        FILL_EVEN_INDICES_OF_POSITION_ENCODING(pe, /*Numcy::sin<t>((p * dt))*/ product);\
+        FILL_ODD_INDICES_OF_POSITION_ENCODING(pe, /*Numcy::cos<t>((p * dt))*/ product);\
+    }\
+    catch (ala_exception& e)\
+    {\
+        std::cout<< e.what() << std::endl;\
+    }\
+}\
 
 /*
     @icp, input csv parser
@@ -265,6 +183,7 @@ ts = Collective<t>(ptr, {static_cast<cc_tokenizer::string_character_traits<char>
     @t, type
     @v, be verbose when true
  */
+/*#define TRAINING_LOOP_LINE_BATCH_SIZE(icp, tcp, ei, di, dm, es, iv, tv, p, dt, pe, is, ts, t, v)*/\
 #define TRAINING_LOOP_LINE_BATCH_SIZE(icp, tcp, ei, di, dm, es, iv, tv, p, dt, pe, is, ts, t, v)\
 {\
     for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < es; i++)\
@@ -284,123 +203,44 @@ ts = Collective<t>(ptr, {static_cast<cc_tokenizer::string_character_traits<char>
             BUILD_INPUT_SEQUENCE_FOR_LINE_BATCH_SIZE(is, iv, icp, t);\
             BUILD_TARGET_SEQUENCE_FOR_LINE_BATCH_SIZE(ts, tv, tcp, t);\
             BUILD_POSITION_ENCODING_FOR_LINE_BATCH_SIZE(p, is, dt, dm, pe, t);\
+            try\
+            {\
             /* Encoder Input */\
             ei = Numcy::concatenate(pe, is);\
             /* Decoder Input */\
             di = Numcy::concatenate(pe, ts);\
-            /* Masks */\
+            /*Masks*/\
             /* The srcMask composite is used as masking matrix for the self-attention mechanism in the Transformer model.*/\
             /* This mask is applied to the attention scores during the self-attention computation to prevent attending to future positions in the sequence. */ \
-            Collective<t> srcMask = Numcy::triu<t>(Numcy::ones<t>({is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), 1, false);\
-            Collective<t> tgtMask = Numcy::triu<t>(Numcy::ones<t>({di.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], di.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), 1, false);\
-            \
-            Encoder encoder(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER, DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER, DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER, DEFAULT_DROP_OUT_RATE_HYPERPARAMETER);\
-            encoder.forward<t>(ei);\
-            /* Reference counting, manual memory management */\
-            /* is.decrementReferenceCount(); */\
-            /*ts.decrementReferenceCount();*/\
-            /*p.decrementReferenceCount();*/\
-            /*dt.decrementReferenceCount();*/\
-            /*pe.decrementReferenceCount();*/\
-            /*  */\
-            /*ei.decrementReferenceCount();*/\
-            /*di.decrementReferenceCount();*/\
-            /*onesForSrcMask.decrementReferenceCount();*/\
+            if (v == true)\
+            {\
+            std::cout<< is.get_shape().get_size() << std::endl;\
+            Collective<t> foo = Numcy::ones(DIMENSIONS{is.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), is.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), NULL, NULL});\
+            for (int i = 0; i < foo.get_shape().get_size(); i++)\
+            {\
+                std::cout<<foo[i] << " ";\
+            }\
+            std::cout<< std::endl;\
+            }\
+            Collective<t> srcMask = Numcy::triu<t>(Numcy::ones(DIMENSIONS{is.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), is.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), NULL, NULL}), 1);\
+            if (v == true)\
+            {\
+            std::cout<< di.get_shape().get_size() << std::endl;\
+            Collective<t> bar = Numcy::ones(DIMENSIONS{di.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), di.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), NULL, NULL});\
+            for (int i = 0; i < bar.get_shape().get_size(); i++)\
+            {\
+                std::cout<<bar[i] << " ";\
+            }\
+            std::cout<< std::endl;\
+            }\
+            Collective<t> tgtMask = Numcy::triu<t>(Numcy::ones(DIMENSIONS{di.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), di.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), NULL, NULL}), 1);\
+            }\
+            catch (ala_exception& e)\
+            {\
+                std::cout<< e.what() << std::endl;\
+            }\
         }\
     }\
 }\
-
-/*
-    @ei, encoder input
-    @di, decoder input
-    @dm, dimensions of the model(d_model)
-    @es, epochs, 
-    @iv, input sequence vocabulary
-    @tv, target sequence vocabulary
-    @p, position
-    @dt, division term
-    @pe, position encoding
-    @is, input sequence
-    @ts, target sequence
-    @t, type
-    @v, be verbose when true
- */
-#define TRAINING_LOOP(ei, di, dm, es, iv, tv, p, dt, pe, is, ts, t, v) {\
-                                                for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < es; i++)\
-                                                {\
-                                                    /* NUMBER OF FORWARD PASSES PER EPOCH */\
-                                                    for (cc_tokenizer::string_character_traits<char>::size_type j = 0; j < iv.len(REPLIKA_PK_USE_WHOLE)/DEFAULT_BATCH_SIZE_HYPERPARAMETER(iv.len(REPLIKA_PK_USE_WHOLE)); j++)\
-                                                    {\
-                                                        cc_tokenizer::string_character_traits<char>::size_type start_index = j*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iv.len(REPLIKA_PK_USE_WHOLE)), end_index = (j + 1)*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iv.len(REPLIKA_PK_USE_WHOLE)) >= iv.len(REPLIKA_PK_USE_WHOLE) ? (j + 1)*iv.len(REPLIKA_PK_USE_WHOLE) : (j + 1)*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iv.len(REPLIKA_PK_USE_WHOLE));\
-                                                        if (v == true)\
-                                                        {\
-                                                            std::cout << "Epoch " << (i + 1) << ": Status of Forward Pass " << (j + 1) << std::endl;\
-                                                            std::cout << "Start Index: " << start_index << "\n"\
-                                                            << "End Index (exclusive): " << end_index << "\n";\
-                                                        }\
-                                                        /* Build input batch, for encoder */\
-                                                        BUILD_INPUT_SEQUENCE_NEW(iv, is, start_index, end_index, t);\
-                                                        /* Build target batch, for decoder */\
-                                                        BUILD_TARGET_SEQUENCE_NEW(tv, ts, start_index, end_index, t);\
-                                                        BUILD_POSITION_ENCODING(dm, p, dt, pe, is);\
-                                                        /* Encoder Input */\
-                                                        ei = Numcy::concatenate(is, pe);\
-                                                        /* Decoder Input */\
-                                                        di = Numcy::concatenate(ts, pe);\
-                                                        /*float* ptr = Numcy::ones({is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL});*/\
-                                                        Numcy::triu(Numcy::ones({is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}), {is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], is.shape[NUMCY_DIMENSIONS_SHAPE_COLUMNS], NULL, NULL}, 0);\
-                                                        if (v == true)\
-                                                        {\
-                                                            std::cout<< "Forward pass information has been recorded successfully." << std::endl;\
-                                                        }\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(is.ptr));\
-                                                        is = {NULL, {0, 0, NULL, NULL}};\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(ts.ptr));\
-                                                        ts = {NULL, {0, 0, NULL, NULL}};\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(p.ptr));\
-                                                        p = {NULL, {0, 0, NULL, NULL}};\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(dt.ptr));\
-                                                        dt = {NULL, {0, 0, NULL, NULL}};\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(pe.ptr));\
-                                                        pe = {NULL, {0, 0, NULL, NULL}};\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(ei.ptr));\
-                                                        ei = {NULL, {0, 0, NULL, NULL}};\
-                                                        cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(di.ptr));\
-                                                        di = {NULL, {0, 0, NULL, NULL}};\
-                                                    }\
-                                                }\
-                                            }\
-
-/*
-    @e, epoch, 
-    @iseq, input sequence
-    @v, verbose,
- */
-#define TRAINING_LOOP_old(e, iseq, v) {\
-                                        for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < e; i++)\
-                                        {\
-                                            if (v == true)\
-                                            {\
-                                                std::cout<<"Epoch: "<<(i + 1)<<std::endl;\
-                                            }\
-                                            std::cout<<iseq.shape.getN()/DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN())<<std::endl;\
-                                            /* Number of forward passes per epoch */\
-                                            for (cc_tokenizer::string_character_traits<char>::size_type j = 0; j < iseq.shape.getN()/DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN()); j++)\
-                                            {\
-                                                cc_tokenizer::string_character_traits<char>::size_type start_index = j*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN()), end_index = 0 /*(j + 1)*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN()) >= iseq.shape.getN() ? j*iseq.shape.getN()  | (j + 1)*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN())*/;\
-                                                /* I SO DON'T LIKE THIS BLOCK */\
-                                                if ((j + 1)*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN()) >= iseq.shape.getN())\
-                                                {\
-                                                    end_index = (j + 1)*iseq.shape.getN();\
-                                                }\
-                                                else\
-                                                {\
-                                                    end_index = (j + 1)*DEFAULT_BATCH_SIZE_HYPERPARAMETER(iseq.shape.getN());\
-                                                }\
-                                                \
-                                                std::cout<<"This forward pass is "<<j + 1<<" and \"start index\" is "<<start_index<<" and \"end index\" is "<<end_index<<"(exclusive)"<<std::endl;\
-                                            }\
-                                        }\
-                                  }\
 
 #endif
