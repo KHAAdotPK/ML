@@ -3,7 +3,6 @@
     Q@khaa.pk
  */
 
-#include "../../../../numcy/numcy.hh"
 #include "./header.hh"
 
 #ifndef NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ATTENTION_HH
@@ -48,22 +47,7 @@ typedef class Attention
             //DIMENSIONS dim2(DIMENSIONS{0, 10, &dim3, NULL});
 
             //cc_tokenizer::string_character_traits<char>::size_type *ptr = cc_tokenizer::allocator<cc_tokenizer::string_character_traits<char>::size_type>().allocate(5);            
-            cc_tokenizer::string_character_traits<char>::size_type *ptr = reinterpret_cast<cc_tokenizer::string_character_traits<char>::size_type*>(cc_tokenizer::allocator<unsigned int>().allocate(5));
-            ptr[0] = 9;
-            ptr[1] = 78;
-            ptr[2] = 10;
-            ptr[3] = 3;
-            ptr[4] = 10;
-
-            DIMENSIONSOFARRAY dimensionsOfArray(ptr, 5);
-
-            DIMENSIONS dim(dimensionsOfArray);
-
-            std::cout << "------->>>>>>> " << dim.getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;
-                        
-            Numcy::Random::randn(dim);
-
-            std::cout<< "Yes..." << std::endl;           
+            //cc_tokenizer::string_character_traits<char>::size_type *ptr = reinterpret_cast<cc_tokenizer::string_character_traits<char>::size_type*>(cc_tokenizer::allocator<unsigned int>().allocate(5));            
         }
 
         /*
@@ -71,8 +55,7 @@ typedef class Attention
          */
         template <typename t = float>
         void forward(Collective<t>& ei)
-        {
-            std::cout<< "Columns = " << ei.getShape().getNumberOfColumns() << ", Rows = " << ei.getShape().getNumberOfRows().getNumberOfInnerArrays() << std::endl;
+        { 
         }
 
         ~Attention()

@@ -3,8 +3,6 @@
     Q@khaa.pk
  */
 
-#include "../../../../numcy/numcy.hh"
-#include "./encoderlayer.hh"
 #include "./header.hh"
 
 #ifndef NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ENCODER_HH
@@ -22,7 +20,7 @@ class Encoder
 
     public:
         Encoder(void) : dimensionsOfTheModel(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER), numberOfLayers(DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER), numberOfAttentionHeads(DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER), dropOutRate(DEFAULT_DROP_OUT_RATE_HYPERPARAMETER), encoderLayerListHead(NULL)
-        {            
+        {
             ENCODERLAYERLIST_PTR current = NULL;
                                     
             for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < numberOfLayers; i++)
@@ -42,7 +40,7 @@ class Encoder
                 
                 current->next = NULL;    
                 current->ptr = new EncoderLayer(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);                
-            }            
+            }                       
         }
         
         /*
@@ -53,12 +51,12 @@ class Encoder
             @dropout_rate, it represents the probability of randomly "dropping out" or deactivating units (neurons) in a layer/encoder. Typically set between 0.1 and 0.5.
          */
         Encoder(cc_tokenizer::string_character_traits<char>::size_type d_model, cc_tokenizer::string_character_traits<char>::size_type num_layers, cc_tokenizer::string_character_traits<char>::size_type num_heads, float dropout_rate) : dimensionsOfTheModel(d_model), numberOfLayers(num_layers), numberOfAttentionHeads(num_heads), dropOutRate(dropout_rate), encoderLayerListHead(NULL)
-        {            
-            ENCODERLAYERLIST_PTR current = NULL;
-            
+        {
+            ENCODERLAYERLIST_PTR current = NULL;  
+
             for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < numberOfLayers; i++)
             {                                
-               if (current == NULL)
+                if (current == NULL)
                 {                    
                     current = reinterpret_cast<ENCODERLAYERLIST_PTR>(cc_tokenizer::allocator<char>().allocate(sizeof(ENCODERLAYERLIST)));
                     encoderLayerListHead = current;
@@ -73,7 +71,7 @@ class Encoder
                 
                 current->next = NULL;    
                 current->ptr = new EncoderLayer(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);
-            }            
+            }                       
         }
 
         template <typename t = float>
@@ -86,11 +84,11 @@ class Encoder
                 current->ptr->forward(ei);
 
                 current = current->next;                    
-            }
+            }           
         }
 
         ~Encoder(void)        
-        {               
+        {
             if (encoderLayerListHead != NULL)
             {
                 ENCODERLAYERLIST_PTR current = encoderLayerListHead;
@@ -102,7 +100,7 @@ class Encoder
 
                     /*
                         The `delete[]` operator is used for deleting arrays allocated with `new[]`.
-                        *(current->ptr) is a single object (not an array), you should use delete instead of 'delete[]'.
+                        *(current->ptr) is a single object (not an array), you should use `delete` instead of `delete[]`.
                      */
                     delete current->ptr;
                     current->ptr = NULL;
@@ -110,7 +108,7 @@ class Encoder
                     cc_tokenizer::allocator<char>().deallocate(reinterpret_cast<char*>(current));
                     current = next;                    
                 }                                
-            }
+            }                           
         }
 };
 #endif

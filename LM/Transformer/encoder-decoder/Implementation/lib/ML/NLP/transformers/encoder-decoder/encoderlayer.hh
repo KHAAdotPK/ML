@@ -12,8 +12,6 @@
     The embedding only happens in the bottom most encoder, but in other encoders, it would be the output of the encoder that is directly below.
  */
 
-#include "../../../../numcy/numcy.hh"
-#include "./attention.hh"
 #include "./header.hh"
 
 #ifndef NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ENCODER_LAYER_HH
@@ -35,13 +33,12 @@ typedef struct EncoderLayerList
 
 typedef ENCODERLAYERLIST* ENCODERLAYERLIST_PTR;
 
-
 /*
     The encoder consists of many encoder layers.
  */
 typedef class EncoderLayer
 {   
-    MULTIHEADATTENTION attention;
+    MULTIHEADATTENTION attention;  
 
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfTheModel, numberOfAttentionHeads;
     float dropOutRate;
@@ -49,7 +46,7 @@ typedef class EncoderLayer
     public:
         EncoderLayer() : dimensionsOfTheModel(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER), numberOfAttentionHeads(DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER), dropOutRate(DEFAULT_DROP_OUT_RATE_HYPERPARAMETER)
         {
-            attention = MULTIHEADATTENTION();
+            attention = MULTIHEADATTENTION();            
         }
         /*
             @d_model, name from the paper "Attention is all we need" we call it "dimensionsOfTheModel". 
@@ -58,7 +55,7 @@ typedef class EncoderLayer
          */
         EncoderLayer(cc_tokenizer::string_character_traits<char>::size_type d_model, cc_tokenizer::string_character_traits<char>::size_type num_heads, float dropout_rate) : dropOutRate(dropout_rate)
         {            
-            attention = MULTIHEADATTENTION(d_model, num_heads);
+            attention = MULTIHEADATTENTION(d_model, num_heads);   
         }
 
         template <typename t = float>

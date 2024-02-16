@@ -46,11 +46,36 @@
 #define DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER 0x100
 
 /*
+    The dropout_rate is a hyperparameter typically set between 0.1 and 0.5
+
+    Dropout Rate: Dropout is a regularization technique commonly used in neural networks, including the Transformer model. 
+    The dropout_rate represents the probability of randomly "dropping out" or deactivating units (neurons) in a layer during training.
+    It helps prevent overfitting and encourages the model to learn more robust and generalized representations by reducing interdependence between units.
+    The dropout_rate is a hyperparameter typically set between 0.1 and 0.5, indicating the fraction of units that are dropped out during training.
+ */
+#define DEFAULT_DROP_OUT_RATE_HYPERPARAMETER 0.1
+
+/*
     TODO, big description about this hyperparameter is needed
  */
 #define DEFAULT_EPOCH_HYPERPARAMETER 1
 
+/*
+    Number of attention heads
+ */
+#define DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER 0x08
+
+/*
+    Typical values for number of layers in the Transformer model range from 4 to 8 or even higher, depending on the specific application.
+    It's common to have an equal number of layers in both the encoder and decoder parts of the Transformer.
+ */
+#define DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER 0x04
+
 /* Hyperparameters end here */
 /* ------------------------ */
+
+#include "./attention.hh"
+#include "./encoderlayer.hh"
+#include "./encoder.hh"
 
 #endif
