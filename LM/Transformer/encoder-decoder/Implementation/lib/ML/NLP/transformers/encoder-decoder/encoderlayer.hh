@@ -61,7 +61,16 @@ typedef class EncoderLayer
         template <typename t = float>
         void forward(Collective<t>& ei)
         {
-            attention.forward(ei);
+            /*
+                The forward method of the ENCODERLAYER class call the forward method of the MULTIHEADATTENTION class with the same argument ei(encoder input) passed three times for query, key, and value.
+                This might seem redundant at first glance, but there's a specific reason for it.
+
+                While it may seem like a repetition, using the same argument for query, key, and value in the MultiHeadAttention call 
+                enables self-attention, a fundamental mechanism for Transformers to understand the relationships within a sequence.
+
+                Read more about in the comment section of MULTIHEADATTENTION::forward()
+             */            
+            attention.forward(ei, ei, ei);
         }
 
         ~EncoderLayer()
