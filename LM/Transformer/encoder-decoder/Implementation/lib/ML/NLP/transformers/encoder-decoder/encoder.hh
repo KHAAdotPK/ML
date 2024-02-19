@@ -8,6 +8,7 @@
 #ifndef NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ENCODER_HH
 #define NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ENCODER_HH
 
+template <typename t = double>
 class Encoder 
 {
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfTheModel, numberOfLayers, numberOfAttentionHeads;
@@ -15,31 +16,31 @@ class Encoder
     /*
         Instead of one encoder we have few. 
      */
-    ENCODERLAYERLIST_PTR encoderLayerListHead;
+    /*ENCODERLAYERLIST_PTR*/ EncoderLayerList<t>* encoderLayerListHead;
     float dropOutRate;
 
     public:
         Encoder(void) : dimensionsOfTheModel(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER), numberOfLayers(DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER), numberOfAttentionHeads(DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER), dropOutRate(DEFAULT_DROP_OUT_RATE_HYPERPARAMETER), encoderLayerListHead(NULL)
         {
-            ENCODERLAYERLIST_PTR current = NULL;
+            /*ENCODERLAYERLIST_PTR*/ EncoderLayerList<t>* current = NULL;
                                     
             for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < numberOfLayers; i++)
             {                                
                 if (current == NULL)
                 {                    
-                    current = reinterpret_cast<ENCODERLAYERLIST_PTR>(cc_tokenizer::allocator<char>().allocate(sizeof(ENCODERLAYERLIST)));
+                    current = reinterpret_cast</*ENCODERLAYERLIST_PTR*/EncoderLayerList<t>*>(cc_tokenizer::allocator<char>().allocate(sizeof(/*ENCODERLAYERLIST*/EncoderLayerList<t>)));
                     encoderLayerListHead = current;
                     current->previous = NULL;                    
                 }
                 else
                 {                 
-                    current->next = reinterpret_cast<ENCODERLAYERLIST_PTR>(cc_tokenizer::allocator<char>().allocate(sizeof(ENCODERLAYERLIST)));
+                    current->next = reinterpret_cast</*ENCODERLAYERLIST_PTR*/EncoderLayerList<t>*>(cc_tokenizer::allocator<char>().allocate(sizeof(/*ENCODERLAYERLIST*/EncoderLayerList<t>)));
                     current->next->previous = current;
                     current = current->next;
                 }
                 
                 current->next = NULL;    
-                current->ptr = new EncoderLayer(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);                
+                current->ptr = new EncoderLayer<t>(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);
             }                       
         }
         
@@ -52,32 +53,32 @@ class Encoder
          */
         Encoder(cc_tokenizer::string_character_traits<char>::size_type d_model, cc_tokenizer::string_character_traits<char>::size_type num_layers, cc_tokenizer::string_character_traits<char>::size_type num_heads, float dropout_rate) : dimensionsOfTheModel(d_model), numberOfLayers(num_layers), numberOfAttentionHeads(num_heads), dropOutRate(dropout_rate), encoderLayerListHead(NULL)
         {
-            ENCODERLAYERLIST_PTR current = NULL;  
+            /*ENCODERLAYERLIST_PTR*/EncoderLayerList<t>* current = NULL;  
 
             for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < numberOfLayers; i++)
             {                                
                 if (current == NULL)
                 {                    
-                    current = reinterpret_cast<ENCODERLAYERLIST_PTR>(cc_tokenizer::allocator<char>().allocate(sizeof(ENCODERLAYERLIST)));
+                    current = reinterpret_cast</*ENCODERLAYERLIST_PTR*/EncoderLayerList<t>*>(cc_tokenizer::allocator<char>().allocate(sizeof(/*ENCODERLAYERLIST*/EncoderLayerList<t>)));
                     encoderLayerListHead = current;
                     current->previous = NULL;                    
                 }
                 else
                 {                 
-                    current->next = reinterpret_cast<ENCODERLAYERLIST_PTR>(cc_tokenizer::allocator<char>().allocate(sizeof(ENCODERLAYERLIST)));
+                    current->next = reinterpret_cast</*ENCODERLAYERLIST_PTR*/EncoderLayerList<t>*>(cc_tokenizer::allocator<char>().allocate(sizeof(/*ENCODERLAYERLIST*/EncoderLayerList<t>)));
                     current->next->previous = current;
                     current = current->next;
                 }
                 
                 current->next = NULL;    
-                current->ptr = new EncoderLayer(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);
+                current->ptr = new EncoderLayer<t>(dimensionsOfTheModel, numberOfAttentionHeads, dropOutRate);
             }                       
         }
 
-        template <typename t = float>
+        /*template <typename t = float>*/
         void forward(Collective<t>& ei)
         {
-            ENCODERLAYERLIST_PTR current = encoderLayerListHead;
+            /*ENCODERLAYERLIST_PTR*/EncoderLayerList<t>* current = encoderLayerListHead;
 
             while (current != NULL)
             {
@@ -91,8 +92,8 @@ class Encoder
         {
             if (encoderLayerListHead != NULL)
             {
-                ENCODERLAYERLIST_PTR current = encoderLayerListHead;
-                ENCODERLAYERLIST_PTR next;
+                /*ENCODERLAYERLIST_PTR*/ EncoderLayerList<t>* current = encoderLayerListHead;
+                /*ENCODERLAYERLIST_PTR*/ EncoderLayerList<t>* next;
                                 
                 while (current != NULL)
                 {

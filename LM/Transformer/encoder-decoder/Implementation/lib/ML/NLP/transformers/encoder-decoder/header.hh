@@ -43,7 +43,10 @@
     Commonly used values for d_model range from 128 to 1024,
     with 256 being a frequently chosen value because in "Attention is All You Need" paper, the authors used an embedding dimension of 256.
  */
-#define DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER 0x100
+//0x100 = 256
+//0x080 = 128
+//0x040 = 64
+#define DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER 0x040
 
 /*
     The dropout_rate is a hyperparameter typically set between 0.1 and 0.5

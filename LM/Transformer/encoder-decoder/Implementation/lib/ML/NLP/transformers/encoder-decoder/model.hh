@@ -234,8 +234,8 @@ ts = Collective<t>(ptr, Dimensions{static_cast<cc_tokenizer::string_character_tr
             std::cout<< std::endl;\
             }\
             Collective<t> tgtMask = Numcy::triu<t>(Numcy::ones(DIMENSIONS{di.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), di.get_shape().get_dimensionsOfArray().getSizeOfInnerMostArray(), NULL, NULL}), 1);\
-            Encoder encoder(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER, DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER, DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER, DEFAULT_DROP_OUT_RATE_HYPERPARAMETER);\
-            encoder.forward<t>(ei);\
+            Encoder<t> encoder(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER, DEFAULT_NUMBER_OF_LAYERS_FOR_ENCODER_HYPERPARAMETER, DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER, DEFAULT_DROP_OUT_RATE_HYPERPARAMETER);\
+            encoder.forward(ei);\
             }\
             catch (ala_exception& e)\
             {\

@@ -18,27 +18,13 @@
 #define NLP_ENCODER_DECODER_TRANSFORMER_MODEL_ENCODER_LAYER_HH
 
 /*
-    Transformer, has "encoder layers" (instead of one encoder we have few). 
- */
-typedef struct EncoderLayerList
-{
-    /*
-        Transformer encoder layer
-     */
-    class EncoderLayer* ptr; 
-
-    struct EncoderLayerList* next;
-    struct EncoderLayerList* previous;
-} ENCODERLAYERLIST;
-
-typedef ENCODERLAYERLIST* ENCODERLAYERLIST_PTR;
-
-/*
     The encoder consists of many encoder layers.
  */
-typedef class EncoderLayer
+template <typename t = double>
+/*typedef*/ class EncoderLayer
 {   
-    MULTIHEADATTENTION attention;  
+    //MULTIHEADATTENTION attention;  
+    Attention<float> attention;
 
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfTheModel, numberOfAttentionHeads;
     float dropOutRate;
@@ -46,7 +32,8 @@ typedef class EncoderLayer
     public:
         EncoderLayer() : dimensionsOfTheModel(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER), numberOfAttentionHeads(DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER), dropOutRate(DEFAULT_DROP_OUT_RATE_HYPERPARAMETER)
         {
-            attention = MULTIHEADATTENTION();            
+            //attention = MULTIHEADATTENTION();  
+            attention = Attention<float>();
         }
         /*
             @d_model, name from the paper "Attention is all we need" we call it "dimensionsOfTheModel". 
@@ -55,10 +42,11 @@ typedef class EncoderLayer
          */
         EncoderLayer(cc_tokenizer::string_character_traits<char>::size_type d_model, cc_tokenizer::string_character_traits<char>::size_type num_heads, float dropout_rate) : dropOutRate(dropout_rate)
         {            
-            attention = MULTIHEADATTENTION(d_model, num_heads);   
+            //attention = MULTIHEADATTENTION(d_model, num_heads);   
+            attention = Attention<float>(d_model, num_heads);
         }
 
-        template <typename t = float>
+        /*template <typename t = float>*/
         void forward(Collective<t>& ei)
         {
             /*
@@ -77,8 +65,27 @@ typedef class EncoderLayer
         {            
         }
 
-} ENCODERLAYER;
+} /*ENCODERLAYER*/;
 
-typedef ENCODERLAYER* ENCODERLAYER_PTR;
+//typedef ENCODERLAYER* ENCODERLAYER_PTR;
+
+/*
+    Transformer, has "encoder layers" (instead of one encoder we have few). 
+ */
+
+template <typename t = double>
+/*typedef*/ struct EncoderLayerList
+{
+    /*
+        Transformer encoder layer
+     */
+    class EncoderLayer<t>* ptr; 
+
+    struct EncoderLayerList<t>* next;
+    struct EncoderLayerList<t>* previous;
+} /*ENCODERLAYERLIST*/;
+
+//typedef struct EncoderLayerList<float> ENCODERLAYERLIST;
+//typedef /*ENCODERLAYERLIST**/  EncoderLayerList<float>* ENCODERLAYERLIST_PTR;
 
 #endif

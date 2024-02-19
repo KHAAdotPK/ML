@@ -11,9 +11,11 @@
 /*
     Multi head attention.
  */
-typedef class Attention
+template <typename t = double>
+/*typedef*/ class Attention // is all you need.
 {
     cc_tokenizer::string_character_traits<char>::size_type dimensionsOfAttentionHead, dimensionsOfTheModel, numberOfAttentionHeads;
+    Collective<t> queryWeights, keyWeights, valueWeights, outputWeights;
 
     public:
         Attention(void) : dimensionsOfAttentionHead(floor((double)(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER/DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER))), dimensionsOfTheModel(DEFAULT_DIMENTIONS_OF_THE_TRANSFORMER_MODEL_HYPERPARAMETER), numberOfAttentionHeads(DEFAULT_NUMBER_OF_ATTENTION_HEADS_HYPERPARAMETER)
@@ -47,7 +49,13 @@ typedef class Attention
             //DIMENSIONS dim2(DIMENSIONS{0, 10, &dim3, NULL});
 
             //cc_tokenizer::string_character_traits<char>::size_type *ptr = cc_tokenizer::allocator<cc_tokenizer::string_character_traits<char>::size_type>().allocate(5);            
-            //cc_tokenizer::string_character_traits<char>::size_type *ptr = reinterpret_cast<cc_tokenizer::string_character_traits<char>::size_type*>(cc_tokenizer::allocator<unsigned int>().allocate(5));            
+            //cc_tokenizer::string_character_traits<char>::size_type *ptr = reinterpret_cast<cc_tokenizer::string_character_traits<char>::size_type*>(cc_tokenizer::allocator<unsigned int>().allocate(5));
+            DIMENSIONS dim = DIMENSIONS{d_model, d_model, NULL, NULL};
+            queryWeights = Numcy::Random::randn<t>(dim);
+            keyWeights = Numcy::Random::randn<t>(dim);
+            valueWeights = Numcy::Random::randn<t>(dim);
+
+            outputWeights = Numcy::Random::randn<t>(dim);
         }
 
         /*
@@ -93,10 +101,10 @@ typedef class Attention
             - The return value...
             3 The final output of the forward method is the weighted sum of the values, where the weights are the normalized attention scores.
          */
-        template <typename t = float>
+        //template <typename t = float>
         void forward(Collective<t>& ei_query, Collective<t> &ei_key, Collective<t> &ei_value)
         { 
-            Numcy::Random::randn(DIMENSIONS{0, 0, NULL, NULL});
+            Numcy::Random::randn<t>(DIMENSIONS{0, 0, NULL, NULL});
         }
 
         ~Attention()
@@ -104,6 +112,6 @@ typedef class Attention
         }
 
 
-} ATTENTION, MULTIHEADATTENTION;
+} /*ATTENTION, MULTIHEADATTENTION*/;
 
 #endif
