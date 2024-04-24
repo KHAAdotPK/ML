@@ -3,7 +3,7 @@
 This project aims to implement encoder-decoder model of Transformers architecture. However, development of the encoder-decoder portion is currently on hold.
 
 ___Reason for Pause___:
-The implementation is waiting for the integration of custom word embeddings trained using the Skip-gram algorithm written in C/C++. Once these word embeddings are available, they can be incorporated into the model.
+The implementation is waiting for the integration of custom word embeddings trained using the Skip-gram algorithm written in C/C++(https://github.com/KHAAdotPK/ML/tree/main/WORD-EMBEDDING-ALGORITHMS/Word2Vec/skip-gram). Once these word embeddings are available, they can be incorporated into the model.
 
 ___Current Progress___:
 The project includes preliminary code for processing and preparing training data.
