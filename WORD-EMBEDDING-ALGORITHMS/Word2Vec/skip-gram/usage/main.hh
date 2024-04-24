@@ -3,7 +3,8 @@
     Written by, Q@khaa.pk
  */
 
-#include "../lib/Skip-Gram/header.hh"
+#include "sundry.hh"
+#include "../lib/ML/NLP/unsupervised/Word2Vec/Skip-Gram/header.hh"
 
 #ifndef CC_TOKENIZER_REPLIKA_PK_SKIP_GRAM_HH
 #define CC_TOKENIZER_REPLIKA_PK_SKIP_GRAM_HH

@@ -151,6 +151,8 @@ int main(int argc, char* argv[])
         return 0;
     }
      */
+
+    double epoch_loss = 0;
     
     /*
         For the neural network itself, Skip-gram typically uses a simple architecture. 
@@ -197,7 +199,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    SKIP_GRAM_TRAINING_LOOP(default_epoch, W1, W2, vocab, pairs, SKIP_GRAM_DEFAULT_LEARNING_RATE, regularizationStrength, double, arg_verbose.i ? true : false);
+    SKIP_GRAM_TRAINING_LOOP(default_epoch, W1, W2, epoch_loss, vocab, pairs, SKIP_GRAM_DEFAULT_LEARNING_RATE, regularizationStrength, double, arg_verbose.i ? true : false);
 
     /*
         Start training loop

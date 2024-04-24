@@ -109,7 +109,7 @@ struct backward_propogation
 
     }
 
-    private:
+    //private:
         /*
             Both arrays has shape which is (corpus::len(), REPLIKA_HIDDEN_SIZE) and (REPLIKA_HIDDEN_SIZE, corpus::len()) respectovely
          */
@@ -445,7 +445,10 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
     /* The shape of grad_u is the same as y_pred which is (1, len(vocab)) */
     Collective<E> grad_u;
     try 
-    {    
+    {   
+        // fp.predicted_probabilities, (1, len(vocab))
+        // oneHot, (1, len(vocab))
+        // grad_u, (1, len(vocab)) 
         grad_u = Numcy::subtract(fp.predicted_probabilities, oneHot);
     }
     catch (ala_exception& e)
@@ -466,6 +469,9 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
     Collective<E> grad_W2;
     try 
     {
+        // fp.intermediate_activation, (1, len(vocab))
+        // grad_u, (1, len(vocab))
+        // grad_W2, (len(vocab), len(vocab))
         grad_W2 = Numcy::outer(fp.intermediate_activation, grad_u);
     }
     catch (ala_exception& e)
@@ -505,6 +511,8 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
         
     //std::cout<< "grad_h -> " << grad_h.getShape().getNumberOfColumns() << ", " << grad_h.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;
     //std::cout<< "grad_W1 -> " << grad_W1.getShape().getNumberOfColumns() << ", " << grad_W1.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;
+    //std::cout<< "W2_T -> " << W2_T.getShape().getNumberOfColumns() << ", " << W2_T.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;
+    //std::cout<< "W2 -> " << W2.getShape().getNumberOfColumns() << ", " << W2.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;
 
     for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < grad_W1.getShape().getNumberOfColumns(); i++)
     {
@@ -526,6 +534,7 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
     @epoch, number of times the training loop would iterate
     @W1, embedding matrix. Each row in W1 is a unique word's embedding vector, representing its semantic relationship with other words
     @W2, output layer. Weights for predicting context words
+    @el, epoch loss
     @vocab, instance of class corpus
     @pairs, inctance of class skip gram pairs. The target/center word and its context words
     @lr, learning rate. The learning rate controls the step size at each iteration of the optimization process
@@ -533,9 +542,10 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
     @t, 
     @verbose, when true puts more text on screen to help debug code    
  */
-#define SKIP_GRAM_TRAINING_LOOP(epoch, W1, W2, vocab, pairs, lr, rs, t, verbose)  {\
+#define SKIP_GRAM_TRAINING_LOOP(epoch, W1, W2, el, vocab, pairs, lr, rs, t, verbose)  {\
     for (cc_tokenizer::string_character_traits<char>::size_type i = 1; i <= epoch; i++)\
     {\
+        el = 0;\
         if (verbose)\
         {\
             std::cout<< "Epoch# " << i << " of " << epoch << " epochs." << std::endl;\
@@ -552,12 +562,52 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
             {\
                 fp = forward<t>(W1, W2, vocab, pair);\
                 bp = backward<t>(W1, W2, vocab, fp, pair);\
+                /*std::cout<< "bp.grad_weights_input_to_hidden -> " << bp.grad_weights_input_to_hidden.getShape().getNumberOfColumns() << ", " << bp.grad_weights_input_to_hidden.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
+                /*std::cout<< "bp.grad_weights_hidden_to_output -> " << bp.grad_weights_hidden_to_output.getShape().getNumberOfColumns() << ", " << bp.grad_weights_hidden_to_output.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
             }\
             catch (ala_exception& e)\
             {\
                 std::cout<< e.what() << std::endl;\
             }\
+            /*W1 -= bp.grad_weights_input_to_hidden * lr;*/\
+            /*bp.grad_weights_hidden_to_output * lr;*/\
+            /*std::cout<< "W2 -> " << W2.getShape().getNumberOfColumns() << ", " << W2.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
+            Collective<t> W2_reshaped;\
+            try\
+            {\
+                W2_reshaped = Numcy::reshape(W2, bp.grad_weights_hidden_to_output);\
+            }\
+            catch(ala_exception& e)\
+            {\
+                std::cout<< e.what() << std::endl;\
+            }\
+            /*std::cout<< "W2_reshaped -> " << W2_reshaped.getShape().getNumberOfColumns() << ", " << W2_reshaped.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
+            /*for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < W2_reshaped.getShape().getDimensionsOfArray().getNumberOfInnerArrays(); i++)*/\
+            /*{*/\
+                /*for (cc_tokenizer::string_character_traits<char>::size_type j = 0; j < W2_reshaped.getShape().getNumberOfColumns(); j++)*/\
+                /*{*/\
+                    /*std::cout<< W2_reshaped[i*W2_reshaped.getShape().getNumberOfColumns() + j] << " ";*/\
+                /*}*/\
+                /*std::cout<< std::endl;*/\
+            /*}*/\
+            /*std::cout<<" ----------------------------------------------------------------------------------------------------------------- " << std::endl;*/\
+            W1 -= bp.grad_weights_input_to_hidden * lr;\
+            W2_reshaped -= bp.grad_weights_hidden_to_output * lr;\
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < W2.getShape().getDimensionsOfArray().getNumberOfInnerArrays(); i++)\
+            {\
+                for (cc_tokenizer::string_character_traits<char>::size_type j = 0; j < W2.getShape().getNumberOfColumns(); j++)\
+                {\
+                    W2[i*W2.getShape().getNumberOfColumns() + j] = W2_reshaped[i*W2_reshaped.getShape().getNumberOfColumns() + j];\
+                }\
+            }\
+            /*std::cout<< fp.predicted_probabilities.getShape().getNumberOfColumns() << fp.predicted_probabilities.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
+            /*std::cout<< "-> " << fp.predicted_probabilities[pair->getCenterWord() - INDEX_ORIGINATES_AT_VALUE] << std::endl;*/\
+            if (!_isnanf(fp.predicted_probabilities[pair->getCenterWord() - INDEX_ORIGINATES_AT_VALUE]))\
+            {\
+                el = el + (-1*log(fp.predicted_probabilities[pair->getCenterWord() - INDEX_ORIGINATES_AT_VALUE]));\
+            }\
         }\
+        std::cout<< "el = " << el/pairs.get_number_of_word_pairs() << std::endl;\
     }\
 }\
 
