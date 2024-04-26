@@ -1,0 +1,28 @@
+Indicate Word Embedding Choice: Specify the library and model file you'll use.
+
+Word Embedding Integration:
+
+Library and Model: Inform me of the chosen library (Gensim/spaCy) and pre-trained model file (e.g., Word2Vec dimensions) for word embeddings.
+Combination Method: Decide on how to combine word embeddings and position encoding (simple addition or learnable weights).
+
+- Positional Encoding: This macro creates a matrix (pe) that captures the relative position of each word in the sequence. It uses sine and cosine functions to encode this information.
+- Word Embeddings: These are pre-trained vector representations of words, learned from a large corpus. They capture the semantic meaning of words.
+
+We'll integrate word embeddings separately from positional encoding.
+
+Word Embedding Library and Model: Select your preferred library (Gensim or spaCy) and a pre-trained word embedding model file (e.g., Word2Vec with desired dimensions).
+
+Combination Method: Choose how to combine word embeddings and position encoding (simple addition or learnable weights).
+
+--------------------------------------------------
+
+Training Your Own Word Embeddings:
+
+Word2Vec or GloVe: These are popular word embedding algorithms you can implement yourself or use libraries like Gensim or spaCy that offer these functionalities. Here's a breakdown:
+
+Word2Vec: Captures semantic relationships by predicting surrounding words based on a central word (CBOW) or vice versa (Skip-gram).
+GloVe: Analyzes word co-occurrence statistics from a large corpus to learn word embeddings.
+Training Data Considerations:
+
+Size: The quality of your word embeddings depends on the size and diversity of your training data. Ensure your data is relevant to your sentiment analysis task.
+Preprocessing: Clean your data by removing stop words, punctuation, and applying appropriate tokenization.
