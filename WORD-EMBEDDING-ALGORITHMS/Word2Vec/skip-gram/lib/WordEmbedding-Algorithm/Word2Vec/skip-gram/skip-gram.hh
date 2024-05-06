@@ -403,43 +403,59 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
  */
 #define SKIP_GRAM_TRAINING_LOOP(epoch, W1, W2, el, vocab, pairs, lr, rs, t, verbose)\
 {\
+    /* Epoch loop */\
     for (cc_tokenizer::string_character_traits<char>::size_type i = 1; i <= epoch; i++)\
     {\
+        /* Initializes the epoch loss to 0 before accumulating errors from word pairs */\
         el = 0;\
+        /* Conditional block that prints the current epoch number if verbose is True */\
         if (verbose)\
         {\
             std::cout<< "Epoch# " << i << " of " << epoch << " epochs." << std::endl;\
         }\
+        /* Shuffle Word Pairs: Shuffles the training data (word pairs) before each epoch to avoid biases in weight updates */\
+        Numcy::Random::shuffle<SKIPGRAMPAIRS>(pairs, pairs.get_number_of_word_pairs());\
+        /* Iterates through each word pair in the training data  */\
         while (pairs.go_to_next_word_pair() != cc_tokenizer::string_character_traits<char>::eof())\
         {\
-            /* We've a pair, a pair is LEFT_CONTEXT_WORD/S CENTER_WORD and RIGHT_CONTEXT_WORD/S */\
+            /* Get Current Word Pair: We've a pair, a pair is LEFT_CONTEXT_WORD/S CENTER_WORD and RIGHT_CONTEXT_WORD/S */\
             WORDPAIRS_PTR pair = pairs.get_current_word_pair();\
             forward_propogation<t> fp;\
             backward_propogation<t> bp;\
             try\
             {\
+                /* Forward Propagation: The forward function performs forward propagation and calculate the hidden layer\
+                   activation and predicted probabilities using the current word pair (pair), embedding matrix (W1),\
+                   output weights (W2), vocabulary (vocab), and data type (t). The result is stored in the fp variable.*/\
                 fp = forward<t>(W1, W2, vocab, pair);\
+                /* Backward Propagation: The backward function performs backward propagation and calculate the gradients\
+                   with respect to the input and output layer weights using the forward propagation results (fp), word pair (pair),\
+                   embedding matrix (W1), output weights (W2), vocabulary (vocab), and data type (t).\
+                   The result is stored in the bp variable. */\
                 bp = backward<t>(W1, W2, vocab, fp, pair);\
-                /*std::cout<< "bp.grad_weights_input_to_hidden COLUMNS -> " << bp.grad_weights_input_to_hidden.getShape().getNumberOfColumns() << ", ROWS -> " << bp.grad_weights_input_to_hidden.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
-                /*std::cout<< "bp.grad_weights_hidden_to_output COLUMNS -> " << bp.grad_weights_hidden_to_output.getShape().getNumberOfColumns() << ", ROWS -> " << bp.grad_weights_hidden_to_output.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
-                /*std::cout<< "W2 COLUMNS -> " << W2.getShape().getNumberOfColumns() << ", ROWS -> " << W2.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
             }\
             catch (ala_exception& e)\
             {\
                 std::cout<< "SKIP_GRAM_TRAINIG_LOOP -> " << e.what() << std::endl;\
             }\
+            /* Reshape and Update W2: Creates a temporary variable W2_reshaped of type Collective<t> to hold the reshaped\
+               output weights held by W2. We need reshaped W2 vector for the later substraction operation between W2 vector\
+               and the other one */\
             Collective<t> W2_reshaped;\
             try\
             {\
+                /* Reshape W2 so tht it has the same shape as the other vector.\
+                   Function reshape works when first vector is smaller in shape than the other vector */\
                 W2_reshaped = Numcy::reshape(W2, bp.grad_weights_hidden_to_output);\
             }\
             catch(ala_exception& e)\
             {\
                 std::cout<< "SKIP_GRAM_TRAINIG_LOOP -> " << e.what() << std::endl;\
             }\
-            /*std::cout<< "W2_reshaped COLUMNS -> " << W2_reshaped.getShape().getNumberOfColumns() << ", ROWS -> " << W2_reshaped.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << std::endl;*/\
-            W1 -= (bp.grad_weights_input_to_hidden * lr);\
-            W2_reshaped -= (bp.grad_weights_hidden_to_output * lr);\
+            /* Update Weights */\
+            W1 -= bp.grad_weights_input_to_hidden * lr;\
+            W2_reshaped -= bp.grad_weights_hidden_to_output * lr;\
+            /* Update W2 */\
             for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < W2.getShape().getDimensionsOfArray().getNumberOfInnerArrays(); i++)\
             {\
                 for (cc_tokenizer::string_character_traits<char>::size_type j = 0; j < W2.getShape().getNumberOfColumns(); j++)\
@@ -447,6 +463,8 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
                     W2[i*W2.getShape().getNumberOfColumns() + j] = W2_reshaped[i*W2_reshaped.getShape().getNumberOfColumns() + j];\
                 }\
             }\
+            /* Loss Function: The Skip-gram model typically uses negative log-likelihood (NLL) as the loss function.\
+               In NLL, lower values indicate better performance. */\
             el = el + (-1*log(fp.predicted_probabilities[pair->getCenterWord() - INDEX_ORIGINATES_AT_VALUE]));\
         }\
         std::cout<< "el = " << el/pairs.get_number_of_word_pairs() << std::endl;\
