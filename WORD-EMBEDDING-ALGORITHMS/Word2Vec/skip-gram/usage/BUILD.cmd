@@ -1,0 +1,4 @@
+@rem cl /EHsc /UGRAMMAR_END_OF_TOKEN_MARKER /UGRAMMAR_END_OF_LINE_MARKER /DGRAMMAR_END_OF_TOKEN_MARKER=" " /DGRAMMAR_END_OF_LINE_MARKER="\n" main.cpp
+@rem cl main.cpp /EHsc /DGRAMMAR_END_OF_TOKEN_MARKER=" " /DGRAMMAR_END_OF_LINE_MARKER="\n"
+
+cl main.cpp ./../lib/sundry/cooked_read.cc /EHsc
