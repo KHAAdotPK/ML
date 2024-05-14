@@ -128,9 +128,17 @@ struct forward_propogation
                 ptr[i] = other.hidden_layer_vector[i];
             }        
         }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
         catch (ala_exception& e)
         {
-            throw ala_exception(cc_tokenizer::String<char>("operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
         }
         hidden_layer_vector = Collective<E>{ptr, other.hidden_layer_vector.getShape().copy()};
 
@@ -142,9 +150,17 @@ struct forward_propogation
                 ptr[i] = other.predicted_probabilities[i];
             }
         }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
         catch (ala_exception& e)
         {
-            throw ala_exception(cc_tokenizer::String<char>("operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
         }
         predicted_probabilities = Collective<E>{ptr, other.predicted_probabilities.getShape().copy()};
 
@@ -156,9 +172,17 @@ struct forward_propogation
                 ptr[i] = other.intermediate_activation[i];
             }
         }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
         catch (ala_exception& e)
         {
-            throw ala_exception(cc_tokenizer::String<char>("operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
         }
         intermediate_activation = Collective<E>{ptr, other.intermediate_activation.getShape().copy()};
         
@@ -219,22 +243,161 @@ struct forward_propogation
  */
 template<typename E>
 struct backward_propogation 
-{
-    /*
-    backward_propogation(void) : grad_W1(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), grad_W2(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), grad_h_with_respect_to_center_or_target_word(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})
-    {
-
-    }
-     */
-
+{           
     backward_propogation() : grad_weights_input_to_hidden(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), grad_weights_hidden_to_output(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), grad_hidden_with_respect_to_center_word(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})
     {
         
     }
 
-    backward_propogation(Collective<E>& grad_W1, Collective<E>& grad_W2) : grad_weights_input_to_hidden(grad_W1), grad_weights_hidden_to_output(grad_W2), grad_hidden_with_respect_to_center_word(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})
+    backward_propogation(Collective<E>& grad_W1, Collective<E>& grad_W2, Collective<E>& grad_center_word) /*: grad_weights_input_to_hidden(grad_W1), grad_weights_hidden_to_output(grad_W2), grad_hidden_with_respect_to_center_word(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})*/
     {
+        E* ptr = NULL;
 
+        try 
+        {                    
+            ptr = cc_tokenizer::allocator<E>().allocate(grad_W1.getShape().getN());
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < grad_W1.getShape().getN(); i++)
+            {
+                ptr[i] = grad_W1[i];                
+            }
+        }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (ala_exception& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what()));
+        }
+        grad_weights_input_to_hidden = Collective<E>{ptr, grad_W1.getShape().copy()};
+
+        try 
+        {                    
+            ptr = cc_tokenizer::allocator<E>().allocate(grad_W2.getShape().getN());
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < grad_W2.getShape().getN(); i++)
+            {
+                ptr[i] = grad_W2[i];                
+            }
+        }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (ala_exception& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what()));
+        }
+        grad_weights_hidden_to_output = Collective<E>{ptr, grad_W2.getShape().copy()};
+
+        //grad_hidden_with_respect_to_center_word = Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}};
+
+        try 
+        {                    
+            ptr = cc_tokenizer::allocator<E>().allocate(grad_center_word.getShape().getN());
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < grad_center_word.getShape().getN(); i++)
+            {
+                ptr[i] = grad_center_word[i];                
+            }
+        }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (ala_exception& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("backward_propogation() Error: ") + cc_tokenizer::String<char>(e.what()));
+        }
+        grad_hidden_with_respect_to_center_word = Collective<E>{ptr, grad_hidden_with_respect_to_center_word.getShape().copy()};
+    }
+
+    backward_propogation<E>& operator= (backward_propogation<E>& other)    
+    { 
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        E* ptr = NULL;
+
+        try 
+        {
+            ptr = cc_tokenizer::allocator<E>().allocate(other.grad_weights_input_to_hidden.getShape().getN());
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < other.grad_weights_input_to_hidden.getShape().getN(); i++)
+            {
+                ptr[i] = other.grad_weights_input_to_hidden[i];
+            }        
+        }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (ala_exception& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
+        }
+        grad_weights_input_to_hidden = Collective<E>{ptr, other.grad_weights_input_to_hidden.getShape().copy()};
+
+        try 
+        {
+            ptr = cc_tokenizer::allocator<E>().allocate(other.grad_weights_hidden_to_output.getShape().getN());
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < other.grad_weights_hidden_to_output.getShape().getN(); i++)
+            {
+                ptr[i] = other.grad_weights_hidden_to_output[i];
+            }        
+        }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (ala_exception& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
+        }
+        grad_weights_hidden_to_output = Collective<E>{ptr, other.grad_weights_hidden_to_output.getShape().copy()};
+
+         try 
+        {
+            ptr = cc_tokenizer::allocator<E>().allocate(other.grad_hidden_with_respect_to_center_word.getShape().getN());
+            for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < other.grad_hidden_with_respect_to_center_word.getShape().getN(); i++)
+            {
+                ptr[i] = other.grad_hidden_with_respect_to_center_word[i];
+            }        
+        }
+        catch (std::length_error& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (std::bad_alloc& e)
+        {
+           throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what())); 
+        }
+        catch (ala_exception& e)
+        {
+            throw ala_exception(cc_tokenizer::String<char>("forward_propogation::operator=() Error: ") + cc_tokenizer::String<char>(e.what()));
+        }
+        grad_hidden_with_respect_to_center_word = Collective<E>{ptr, other.grad_hidden_with_respect_to_center_word.getShape().copy()};
+
+        return *this;
     }
 
     //private:
@@ -560,7 +723,7 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
         Dimensions of grad_W1 is (len(vocab) without redundency, SKIP_GRAM_EMBEDDNG_VECTOR_SIZE)
         Dimensions of grad_W2 is (len(vocab) without redundency, len(vocab) without redundency)
      */    
-    return backward_propogation<E>{grad_W1, grad_W2};
+    return backward_propogation<E>{grad_W1, grad_W2, Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}};
 }       
 
 /*
