@@ -757,8 +757,72 @@ backward_propogation<E> backward(Collective<E>& W1, Collective<E>& W2, CORPUS_RE
 }       
 
 /*
-    Training loop
-    -------------
+    Breakdown of code
+    -----------------
+    Training Loop: The loop iterates over the specified number of epochs and performs training steps in each iteration.
+    Shuffling Word Pairs: The training data (word pairs) are shuffled before each epoch to prevent biases in weight updates.
+                          This is a good practice to ensure the model learns effectively from the data.
+    Forward and Backward Propagation: Inside the loop, forward propagation is performed to calculate the hidden layer activation
+                          and predicted probabilities using the current word pair, embedding matrix, and output weights.
+                          Then, backward propagation calculates the gradients with respect to the input and output layer weights.
+    Updating Weights: After calculating gradients, the weights are updated using gradient descent. Both the embedding matrix (W1)
+                      and the output weights (W2) are updated.
+    Updating Weights: After calculating gradients, the weights are updated using gradient descent.
+                      Both the embedding matrix (W1) and the output weights (W2) are updated. 
+    Loss Calculation: The negative log-likelihood (NLL) loss function is used to evaluate the model's performance.
+                      Lower values indicate better performance. 
+
+    Limitations and missing components
+    ----------------------------------
+    Optimization Algorithms: The code uses a basic gradient descent approach for weight updates.
+                             More advanced optimization algorithms like Adam, RMSProp,
+                             or Adagrad could be implemented to improve convergence speed and performance.
+    Evaluation Metrics: While the loss function provides feedback on the model's performance during training,
+                        additional evaluation metrics like accuracy or precision-recall could be included to assess
+                        the model's effectiveness in capturing semantic relationships.
+    Debugging and Logging: While the code includes verbose mode for printing additional information during training,
+                           more comprehensive debugging and logging mechanisms could be implemented to facilitate
+                           troubleshooting and monitoring during training.
+
+    Next TODO, Implement L1/L2 regularization technique
+    ---------------------------------------------------                       
+    Regularization techniques: Implementing L1 and L2 regularization techniques in the Skip-gram model depends on
+                               various factors such as the specific requirements of your application, the size of the dataset,
+                               the complexity of the model, and the desired level of generalization.
+
+                               Considerations for implementing regularization in your code
+                               -----------------------------------------------------------
+                               Overfitting: Regularization techniques like L1 and L2 can help prevent overfitting,
+                                            especially when dealing with large datasets or complex models.
+                                            If you observe that your model is performing well on the training data
+                                            but poorly on unseen data (validation or test set), regularization might be beneficial.
+                               Model Complexity: Skip-gram models with a large number of parameters or embedding dimensions are more
+                                                 prone to overfitting. Regularization techniques can help control the complexity of
+                                                 the model and improve generalization.
+                               Training Data Size: If you have a relatively small training dataset, regularization can be particularly
+                                                   useful in preventing the model from memorizing the training examples and instead learning
+                                                   more generalizable patterns. 
+                               Generalization: Regularization encourages the model to learn simpler patterns that generalize better to
+                                               unseen data. If you're interested in building a Skip-gram model that performs well on a wide
+                                               range of contexts and words, regularization might be beneficial.
+
+                               Consideration against implementing regularization technique in you code
+                               -----------------------------------------------------------------------                
+                               Computational Resources: Regularization introduces additional computational overhead during training, especially
+                                             for L1 regularization, which involves absolute value penalties. Consider whether your computational
+                                             resources can handle the increased training time.
+                               Hyperparameter Tuning: Regularization introduces additional hyperparameters (e.g., regularization strength) that
+                                                      need to be tuned alongside other model hyperparameters. Ensure you have a proper validation
+                                                      strategy to tune these hyperparameters effectively. 
+
+                               In summary, while L1 and L2 regularization techniques can be beneficial for controlling overfitting and improving generalization 
+                               in Skip-gram models, their implementation should be based on your specific requirements, dataset characteristics, and available
+                               computational resources.
+                               If you observe signs of overfitting or poor generalization, experimenting with regularization techniques could be worthwhile.                                                                                                   
+
+
+    Training loop arguments
+    -----------------------
     @epoch, number of times the training loop would iterate
     @W1, embedding matrix. Each row in W1 is a unique word's embedding vector, representing its semantic relationship with other words
     @W2, output layer. Weights for predicting context words
