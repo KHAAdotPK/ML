@@ -11,10 +11,22 @@
 template<typename E>
 struct forward_propogation 
 {
+    /*
+        In the first constructor, forward_propagation(),
+        member variables hidden_layer_vector, predicted_probabilities, and intermediate_activation
+        are initialized directly in the initialization list.
+        This approach is cleaner and more efficient than assigning them inside the constructor body.
+     */
     forward_propogation(void) : hidden_layer_vector(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), predicted_probabilities(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), intermediate_activation(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})
     {        
     }
 
+    /*
+        TODO, 
+        Use of Initialization Lists: Utilize constructor initialization lists to initialize
+        member variables rather than assigning them inside the constructor body. This improves efficiency and readability...
+        implemented but still commented out from the implementation of function.
+     */
     //forward_propogation<E>(Collective<E>& h, Collective<E>& y_pred, Collective<E>& u) : hidden_layer_vector(h), predicted_probabilities(y_pred), intermediate_activation(u)
     forward_propogation<E>(Collective<E>& h, Collective<E>& y_pred, Collective<E>& u) /*: hidden_layer_vector(h), predicted_probabilities(y_pred), intermediate_activation(u) */
     {           
@@ -189,6 +201,9 @@ struct forward_propogation
         return *this;
     }
 
+    /*
+        TODO, uncomment the following statement and make all variables/properties of this vector private.
+     */
     //private:
         /*
             In the context of our CBOW/Skip-Gram model, h refers to the hidden layer vector obtained by averaging the embeddings of the context words.
@@ -243,12 +258,24 @@ struct forward_propogation
  */
 template<typename E>
 struct backward_propogation 
-{           
+{  
+    /*
+        In the first constructor, forward_propagation(),
+        member variables hidden_layer_vector, predicted_probabilities, and intermediate_activation
+        are initialized directly in the initialization list.
+        This approach is cleaner and more efficient than assigning them inside the constructor body.
+     */         
     backward_propogation() : grad_weights_input_to_hidden(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), grad_weights_hidden_to_output(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}}), grad_hidden_with_respect_to_center_word(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})
     {
         
     }
 
+    /*
+        TODO, 
+        Use of Initialization Lists: Utilize constructor initialization lists to initialize
+        member variables rather than assigning them inside the constructor body. This improves efficiency and readability...
+        implemented but still commented out from the implementation of function.
+     */
     backward_propogation(Collective<E>& grad_W1, Collective<E>& grad_W2, Collective<E>& grad_center_word) /*: grad_weights_input_to_hidden(grad_W1), grad_weights_hidden_to_output(grad_W2), grad_hidden_with_respect_to_center_word(Collective<E>{NULL, DIMENSIONS{0, 0, NULL, NULL}})*/
     {
         E* ptr = NULL;
@@ -400,6 +427,9 @@ struct backward_propogation
         return *this;
     }
 
+    /*
+        TODO, uncomment the following statement and make all variables/properties of this vector private.
+     */
     //private:
         /*
             Both arrays has shape which is (corpus::len(), REPLIKA_HIDDEN_SIZE) and (REPLIKA_HIDDEN_SIZE, corpus::len()) respectovely
