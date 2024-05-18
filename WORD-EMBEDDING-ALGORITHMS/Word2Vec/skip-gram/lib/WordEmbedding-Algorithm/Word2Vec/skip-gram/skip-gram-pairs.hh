@@ -40,8 +40,6 @@
 #define R3PLICA_SKIP_GRAM_PAIRS_HH
 
 #include "header.hh"
-#include "../../../string/src/String.hh"
-#include "../../../corpus/corpus.hh"
 
 struct SkipGramPairs;
 
