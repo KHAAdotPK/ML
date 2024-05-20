@@ -771,6 +771,12 @@ backward_propogation<T> backward(Collective<T>& W1, Collective<T>& W2, CORPUS_RE
 
         W2_T = Numcy::transpose(W2);
 
+        std::cout<< "grad_u " << grad_u.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << ", " << grad_u.getShape().getNumberOfColumns() << std::endl;
+
+        /*
+            grad_u [1, 115]
+            W2_T [115, 100]
+         */
         grad_h = Numcy::dot(grad_u, W2_T);
 
         grad_W1 = Numcy::zeros(DIMENSIONS{SKIP_GRAM_EMBEDDNG_VECTOR_SIZE, vocab.numberOfUniqueTokens(), NULL, NULL});
@@ -941,7 +947,15 @@ backward_propogation<T> backward(Collective<T>& W1, Collective<T>& W2, CORPUS_RE
                 *multiplier = rs;\
                 Collective<t> b = Collective<t>{multiplier, DIMENSIONS{1, 1, NULL, NULL}};\
                 Collective<t> product = Numcy::dot(target_W1_row_signs, b);\
-                /*Collective<t> summed = Numcy::sum(bp.grad_weights_input_to_hidden, product);*/\
+                /*std::cout<< product.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << ", " << product.getShape().getNumberOfColumns() << std::endl;*/\
+                /*std::cout<< bp.grad_weights_input_to_hidden.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << ", " << bp.grad_weights_input_to_hidden.getShape().getNumberOfColumns() << std::endl;*/\
+                Collective<t> summed = Numcy::sum(bp.grad_weights_input_to_hidden, product, AXIS_ROWS);\
+                /*std::cout<< summed.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << ", " << summed.getShape().getNumberOfColumns() << std::endl;*/\
+                /*std::cout<< bp.grad_weights_input_to_hidden.getShape().getDimensionsOfArray().getNumberOfInnerArrays() << ", " << bp.grad_weights_input_to_hidden.getShape().getNumberOfColumns() << std::endl;*/\
+                for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < bp.grad_weights_input_to_hidden.getShape().getN(); i++)\
+                {\
+                    bp.grad_weights_input_to_hidden[i] = summed[i];\
+                }\
             }\
             catch (std::length_error& e)\
             {\
