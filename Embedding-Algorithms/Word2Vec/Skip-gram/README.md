@@ -6,7 +6,8 @@ In terms of neural network terminology, here's how our implementation of skip-gr
 1. Input layer.
 The input is a one-hot encoded vector representing the target word. If the vocabulary size is 𝑉, the input vector 𝑥 will have a size of 𝑉. 
 ~~What is a One-Hot Encoded Vector?
-A one-hot encoded vector is a representation of a categorical variable (like a word) as a binary vector.~~
+A one-hot encoded vector is a representation of a categorical variable (like a word) as a binary vector. If the vocabulary size is 
+𝑉, each word can be represented as a one-hot encoded vector of size 𝑉. In a one-hot encoded vector, one element is 1 (indicating the presence of the word), and all other elements are 0.~~
 **Instead of one-hot vector this implementation uses a linkedlist of pairs**... 
 The input vector x(it is linked list of pairs, each pair has a center/target word and corresponding context words on its left and right. Number of context words on each side of center/target words is determined by the macro SKIP_GRAM_WINDOW_SIZE. This macro is a hyperparameter). The size or the number of links in this linked list is equal to the number of unique(no redundency) words in the vocabulary, if number of such words is V then linkned list will have V many links as well. 
  ```C++
@@ -38,18 +39,33 @@ for (cc_tokenizer::string_character_traits<char>::size_type i = 1; i <= epoch; i
     /* Batch processing */
     while (pairs.go_to_next_word_pair() != cc_tokenizer::string_character_traits<char>::eof())
     {
+        /* Get Current Word Pair: We've a pair, a pair is LEFT_CONTEXT_WORD/S CENTER_WORD and RIGHT_CONTEXT_WORD/S */
+        WORDPAIRS_PTR pair = pairs.get_current_word_pair();        
+        /*
+            Extract the corresponding word embedding from the weight matrix 𝑊1.
+            Instead of directly using a one-hot input vector, this implementation uses a linked list of word pairs.
+            Each pair provides the index of the center word, which serves to extract the relevant embedding from 𝑊1.
+            The embedding for the center word is stored in the hidden layer vector h.
+         */
+        // Loop through the columns of W1 to extract the embedding for the center word.
         for (cc_tokenizer::string_character_traits<char>::size_type i = 0; i < W1.getShape().getNumberOfColumns(); i++)
         {
             *(h_ptr + i) = W1[W1.getShape().getNumberOfColumns()*(pair->getCenterWord() - INDEX_ORIGINATES_AT_VALUE) + i];
         }
+        /*
+            Create the hidden layer vector 'h' using the extracted embedding values. 
+            'h_ptr' points to the beginning of the extracted embedding and DIMENSIONS specifies the size of the hidden layer vector.
+         */
         Collective<T> h = Collective<T>{h_ptr, DIMENSIONS{W1.getShape().getNumberOfColumns(), 1, NULL, NULL}};
+
+        // 'h' now contains the embedding of the center word, which will be used for further computations
     }
 }
 ```
 3. Output Layer.
 The hidden layer is connected to the output layer through another weight matrix 𝑊2 of size 𝑁×𝑉.
 ```C++
-Collective<double> W2 = W2 = Numcy::Random::randn(DIMENSIONS{vocab.numberOfUniqueTokens(), SKIP_GRAM_EMBEDDNG_VECTOR_SIZE, NULL, NULL});
+Collective<double> W2 = Numcy::Random::randn(DIMENSIONS{vocab.numberOfUniqueTokens(), SKIP_GRAM_EMBEDDNG_VECTOR_SIZE, NULL, NULL});
 ```
 + The output layer produces a score for each word in the vocabulary, typically using the softmax function to convert scores into probabilities **scores=W2^T*h** and **probabilities=softmax(scores)**
 ```C++
