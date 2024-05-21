@@ -88,14 +88,14 @@ int main(int argc, char* argv[])
         on the validation set starts to degrade.
      */
     unsigned long default_epoch = SKIP_GRAM_DEFAULT_EPOCH;    
-    FIND_ARG(argv, argc, argsv_parser, "epoch", arg_epoch);
+    FIND_ARG(argv, argc, argsv_parser, "e", arg_epoch);
     if (arg_epoch.i)
     {
         FIND_ARG_BLOCK(argv, argc, argsv_parser, arg_epoch);
 
         if (arg_epoch.argc)
         {            
-            default_epoch = atoi(argv[arg_epoch.j]);
+            default_epoch = atoi(argv[arg_epoch.i + 1]);            
         }
         else
         {
@@ -177,8 +177,8 @@ int main(int argc, char* argv[])
     }
 
     double epoch_loss = 0.0;
-             
+                 
     SKIP_GRAM_TRAINING_LOOP(default_epoch, W1, W2, epoch_loss, vocab, pairs, default_lr, default_rs, double, arg_verbose.i ? true : false);
-            
+                
     return 0;
 }
